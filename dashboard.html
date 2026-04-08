@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--sur:#111118;--sur2:#18181f;--sur3:#1e1e28;
+  --b:#ffffff0f;--b2:#ffffff18;--text:#e8e8f0;--muted:#6b6b80;--dim:#3a3a4a;
+  --green:#00e5a0;--gd:#00e5a018;--gb:#00e5a030;
+  --amber:#f5a623;--ad:#f5a62318;--ab:#f5a62330;
+  --red:#ff4d6d;--rd:#ff4d6d18;--rb:#ff4d6d30;
+  --blue:#4d9fff;--bd:#4d9fff18;--bb:#4d9fff30;
+  --purple:#a855f7;--pd:#a855f718;--pb:#a855f730;
+  --r:10px;--rs:6px;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6}
+body{display:flex;min-height:100vh;overflow:hidden}
+.sidebar{width:216px;height:100vh;background:var(--sur);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--b)}
+.logo-mark{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:3px}
+.logo-name{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.logo-name span{color:var(--green)}
+.nav{padding:10px 8px;flex:1}
+.nav-sec{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:10px 10px 4px;font-weight:500}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.ni:hover{background:var(--sur2);color:var(--text)}
+.ni.active{background:var(--gd);color:var(--green);border:1px solid var(--gb)}
+.ni svg{width:15px;height:15px;opacity:.7;flex-shrink:0}
+.ni.active svg{opacity:1}
+.sf{padding:14px;border-top:1px solid var(--b)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px;box-shadow:0 0 6px var(--green)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;overflow:hidden}
+.topbar{padding:12px 22px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;background:var(--sur);flex-shrink:0}
+.pt{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.tr{display:flex;align-items:center;gap:10px}
+.api-field{display:flex;align-items:center;gap:7px;background:var(--sur2);border:1px solid var(--b2);border-radius:var(--rs);padding:5px 10px}
+.api-field label{font-size:11px;color:var(--muted);white-space:nowrap}
+.api-field input{background:none;border:none;color:var(--text);font-family:var(--mono);font-size:11px;width:120px}
+.api-field input:focus{outline:none}
+.con{padding:22px;flex:1;overflow-y:auto}
+.page{display:none}
+.page.active{display:block}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.sc{background:var(--sur);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:6px}
+.sv{font-size:24px;font-weight:600;font-family:var(--mono)}
+.sc.g .sv{color:var(--green)}.sc.a .sv{color:var(--amber)}.sc.b .sv{color:var(--blue)}
+.ss{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Sections */
+.sec{background:var(--sur);border:1px solid var(--b);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.sh{padding:13px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.st{font-size:13px;font-weight:600}
+.sb{padding:18px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--rs);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:var(--font)}
+.btn-p{background:var(--green);color:#000;font-weight:600}
+.btn-p:hover{background:#00ccb8;transform:translateY(-1px)}
+.btn-g{background:transparent;color:var(--muted);border:1px solid var(--b2)}
+.btn-g:hover{background:var(--sur2);color:var(--text)}
+.btn-d{background:var(--rd);color:var(--red);border:1px solid var(--rb)}
+.btn-d:hover{background:var(--red);color:#fff}
+.btn-s{background:var(--gd);color:var(--green);border:1px solid var(--gb)}
+.btn-s:hover{background:var(--green);color:#000}
+.btn-b{background:var(--bd);color:var(--blue);border:1px solid var(--bb)}
+.btn-b:hover{background:var(--blue);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* Form */
+.fr{display:grid;gap:11px;margin-bottom:11px}
+.fr.c2{grid-template-columns:1fr 1fr}
+.fld label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:5px;letter-spacing:.02em}
+.fld input,.fld select,.fld textarea{width:100%;background:var(--sur2);border:1px solid var(--b2);border-radius:var(--rs);padding:8px 11px;color:var(--text);font-size:13px;font-family:var(--font);transition:border-color .15s;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--green)}
+.fld textarea{line-height:1.6}
+.fld select option{background:var(--sur2)}
+
+/* Table */
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:7px 11px;border-bottom:1px solid var(--b);font-weight:500}
+.table td{padding:10px 11px;border-bottom:1px solid var(--b);font-size:13px;vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--sur2)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bp{background:var(--ad);color:var(--amber);border:1px solid var(--ab)}
+.ba{background:var(--gd);color:var(--green);border:1px solid var(--gb)}
+.br{background:var(--rd);color:var(--red);border:1px solid var(--rb)}
+.bs{background:var(--bd);color:var(--blue);border:1px solid var(--bb)}
+.bi{background:var(--pd);color:var(--purple);border:1px solid var(--pb)}
+
+/* Score */
+.score{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;font-size:11px;font-weight:700;font-family:var(--mono)}
+.sh-s{background:var(--gd);color:var(--green);border:1.5px solid var(--gb)}
+.mi-s{background:var(--ad);color:var(--amber);border:1.5px solid var(--ab)}
+.lo-s{background:var(--rd);color:var(--red);border:1.5px solid var(--rb)}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;background:var(--sur2);border-radius:var(--rs);padding:3px;margin-bottom:16px;width:fit-content}
+.tab{padding:5px 13px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:none;font-family:var(--font);transition:all .15s}
+.tab.active{background:var(--sur);color:var(--text);border:1px solid var(--b2)}
+
+/* Misc */
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty-i{font-size:28px;margin-bottom:8px;opacity:.4}
+.spin{width:14px;height:14px;border:2px solid var(--b2);border-top-color:var(--green);border-radius:50%;animation:sp .6s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;bottom:18px;right:18px;z-index:1000;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--sur2);border:1px solid var(--b2);border-radius:var(--r);padding:10px 14px;font-size:12px;min-width:220px;display:flex;align-items:center;gap:8px;animation:si .2s ease;box-shadow:0 8px 32px #00000060}
+.toast.ok{border-color:var(--gb);background:var(--gd)}.toast.er{border-color:var(--rb);background:var(--rd)}
+@keyframes si{from{transform:translateX(14px);opacity:0}to{transform:translateX(0);opacity:1}}
+.chip{padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--b2);color:var(--muted);transition:all .15s;display:inline-block;margin:2px}
+.chip.active{border-color:var(--green);color:var(--green);background:var(--gd)}
+.tag{background:var(--sur3);border:1px solid var(--b);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--muted);font-family:var(--mono);display:inline-block;margin:2px}
+.info{background:var(--sur2);border:1px solid var(--b2);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.info strong{color:var(--text)}
+
+/* Split layout for documents */
+.split{display:grid;grid-template-columns:280px 1fr;gap:16px;height:calc(100vh - 120px)}
+.file-list{background:var(--sur);border:1px solid var(--b);border-radius:var(--r);overflow-y:auto}
+.file-item{padding:11px 14px;border-bottom:1px solid var(--b);cursor:pointer;transition:background .12s}
+.file-item:hover{background:var(--sur2)}
+.file-item.active{background:var(--gd);border-left:2px solid var(--green)}
+.file-item:last-child{border-bottom:none}
+.fi-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.fi-meta{font-size:11px;color:var(--muted)}
+.editor-panel{background:var(--sur);border:1px solid var(--b);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
+.editor-toolbar{padding:11px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.editor-title{font-size:12px;font-weight:600;color:var(--text);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+.editor-actions{display:flex;gap:6px;flex-shrink:0}
+.editor-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.editor-textarea{flex:1;width:100%;background:var(--sur2);border:none;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.8;padding:18px;resize:none;outline:none}
+.editor-textarea:focus{outline:none}
+.no-selection{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px;flex-direction:column;gap:10px}
+.no-selection-icon{font-size:32px;opacity:.25}
+
+/* Provider cards */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.pcard{background:var(--sur2);border:1px solid var(--b2);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .18s;position:relative}
+.pcard:hover{border-color:var(--b)}
+.pcard.active-p{border-color:var(--green)!important;background:var(--gd)}
+.pcard.active-p::after{content:'ACTIVE';position:absolute;top:9px;right:9px;font-size:9px;letter-spacing:.1em;color:var(--green);font-weight:700;background:var(--gd);padding:2px 7px;border-radius:20px;border:1px solid var(--gb)}
+.pname{font-size:14px;font-weight:600;margin-bottom:3px}
+.pmodel{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:10px}
+.pkey{font-size:10px;color:var(--muted);font-family:var(--mono);background:var(--sur3);padding:3px 7px;border-radius:4px;margin-bottom:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-row{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap}
+.ps-btn{background:var(--sur3);border:1px solid var(--b);border-radius:var(--rs);padding:6px 10px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s;text-align:center}
+.ps-btn:hover{border-color:var(--b2);color:var(--text)}
+.ps-btn.sel{border-color:var(--green);background:var(--gd);color:var(--green)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Job Assistant</div>
+    <div class="logo-name">Prasad<span>.</span>AI</div>
+  </div>
+  <div class="nav">
+    <div class="nav-sec">Workspace</div>
+    <button class="ni active" onclick="P('dashboard',this)">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+      Dashboard
+    </button>
+    <button class="ni" onclick="P('submit',this)">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v10M3 6l5-5 5 5M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Submit Job
+    </button>
+    <button class="ni" onclick="P('review',this)">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Review Queue
+    </button>
+    <button class="ni" onclick="P('history',this)">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      History
+    </button>
+    <div class="nav-sec">Documents</div>
+    <button class="ni" onclick="P('resumes',this)">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Resumes
+    </button>
+    <button class="ni" onclick="P('coverletters',this)">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 5l7 5 7-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Cover Letters
+    </button>
+    <div class="nav-sec">Config</div>
+    <button class="ni" onclick="P('agents',this)">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      AI Agents
+    </button>
+    <button class="ni" onclick="P('commands',this)">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 3l4 4-4 4M8 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Commands
+    </button>
+    <button class="ni" onclick="P('emails',this)">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Email Monitor
+    </button>
+  </div>
+  <div class="sf">
+    <div style="margin-bottom:4px"><span class="sdot" id="sdot"></span><span style="font-size:12px;color:var(--muted)" id="sstatus">Connecting...</span></div>
+    <div style="font-size:10px;color:var(--dim);font-family:var(--mono)" id="smodel">—</div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="pt" id="ptitle">Dashboard</div>
+    <div class="tr">
+      <div class="api-field">
+        <label>Key</label>
+        <input type="password" id="akey" value="changeme" placeholder="FILES_AUTH_KEY">
+      </div>
+      <button class="btn btn-g" style="padding:7px 10px" onclick="refreshCurrent()">↻</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="con page active" id="page-dashboard">
+    <div class="stats">
+      <div class="sc"><div class="sl">Total</div><div class="sv" id="s-total">—</div><div class="ss">applications</div></div>
+      <div class="sc a"><div class="sl">Pending</div><div class="sv" id="s-pending">—</div><div class="ss">need review</div></div>
+      <div class="sc g"><div class="sl">Approved</div><div class="sv" id="s-approved">—</div><div class="ss">ready to send</div></div>
+      <div class="sc b"><div class="sl">Submitted</div><div class="sv" id="s-submitted">—</div><div class="ss">sent out</div></div>
+      <div class="sc"><div class="sl">Avg fit</div><div class="sv" id="s-fit">—</div><div class="ss">score /100</div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">Recent applications</div><button class="btn btn-g" onclick="P('review')">Pending →</button></div>
+      <div id="recent-list"><div class="empty"><div class="spin" style="margin:0 auto 10px"></div></div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">System</div></div>
+      <div class="sb" id="sys-status">Loading...</div>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="con page" id="page-submit">
+    <div class="sec">
+      <div class="sh"><div class="st">Submit a job posting</div></div>
+      <div class="sb">
+        <div class="tabs">
+          <button class="tab active" onclick="swTab('text',this)">Paste text</button>
+          <button class="tab" onclick="swTab('url',this)">URL</button>
+          <button class="tab" onclick="swTab('csv',this)">CSV / XLSX</button>
+        </div>
+        <div id="tab-text">
+          <div class="fr c2">
+            <div class="fld"><label>Company</label><input id="tc" placeholder="e.g. Google"></div>
+            <div class="fld"><label>Role</label><input id="tr" placeholder="e.g. Data Scientist"></div>
+          </div>
+          <div class="fld" style="margin-bottom:11px"><label>Job description</label><textarea id="td" style="min-height:160px" placeholder="Paste the full job description..."></textarea></div>
+          <div class="fr c2">
+            <div class="fld"><label>URL (optional)</label><input id="tu" placeholder="https://..."></div>
+            <div class="fld"><label>Custom instruction (optional)</label><input id="ti" placeholder='"emphasise GCP and BigQuery skills"'></div>
+          </div>
+          <button class="btn btn-p" id="sub-btn" onclick="submitText()" style="margin-top:4px">Submit job</button>
+        </div>
+        <div id="tab-url" style="display:none">
+          <div class="fr c2">
+            <div class="fld"><label>Company</label><input id="uc" placeholder="e.g. Stripe"></div>
+            <div class="fld"><label>Role</label><input id="ur" placeholder="e.g. ML Engineer"></div>
+          </div>
+          <div class="fld" style="margin-bottom:12px"><label>Job posting URL</label><input id="uu" placeholder="https://..."></div>
+          <button class="btn btn-p" onclick="submitUrl()">Fetch & submit</button>
+        </div>
+        <div id="tab-csv" style="display:none">
+          <div class="info">Required columns: <strong>company_name, role, description</strong> &nbsp;·&nbsp; Optional: <strong>url</strong></div>
+          <div class="fld" style="margin-bottom:12px"><label>File (CSV, XLSX, TSV)</label><input type="file" id="cf" accept=".csv,.xlsx,.xls,.tsv" style="padding:7px"></div>
+          <button class="btn btn-p" onclick="submitCsv()">Upload & submit all</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="con page" id="page-review">
+    <div class="sec">
+      <div class="sh"><div class="st">Pending review</div><button class="btn btn-g" onclick="loadPending()">↻</button></div>
+      <div id="pending-list"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="con page" id="page-history">
+    <div class="sec">
+      <div class="sh">
+        <div class="st">Application history</div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <select id="hf" onchange="loadHistory()" style="background:var(--sur2);border:1px solid var(--b2);color:var(--text);padding:4px 8px;border-radius:var(--rs);font-size:12px;font-family:var(--font)">
+            <option value="">All</option>
+            <option value="pending_review">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="submitted">Submitted</option>
+            <option value="interview_invited">Interview</option>
+            <option value="rejected_by_company">Rejected by co.</option>
+          </select>
+          <button class="btn btn-g" onclick="loadHistory()">↻</button>
+        </div>
+      </div>
+      <div id="history-list"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>
+    </div>
+    <div class="sec" id="det-panel" style="display:none">
+      <div class="sh"><div class="st" id="det-title">Detail</div><button class="btn btn-g" onclick="qid('det-panel').style.display='none'">✕</button></div>
+      <div class="sb" id="det-body"></div>
+    </div>
+  </div>
+
+  <!-- RESUMES -->
+  <div class="con page" id="page-resumes" style="padding:0">
+    <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:var(--muted)" id="resume-dir-label">Resumes directory</div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <input type="file" id="resume-upload-input" accept=".pdf" style="display:none" onchange="uploadResume(this)">
+        <button class="btn btn-p" onclick="qid('resume-upload-input').click()">+ Upload resume</button>
+        <button class="btn btn-g" onclick="loadResumes()">↻</button>
+      </div>
+    </div>
+    <div style="padding:12px 22px;height:calc(100vh - 100px)">
+      <div class="split">
+        <div class="file-list" id="resume-list">
+          <div class="empty"><div class="spin" style="margin:0 auto"></div></div>
+        </div>
+        <div class="editor-panel" id="resume-editor">
+          <div class="no-selection">
+            <div class="no-selection-icon">📄</div>
+            <div>Select a resume to preview</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COVER LETTERS -->
+  <div class="con page" id="page-coverletters" style="padding:0">
+    <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:var(--muted)" id="cl-dir-label">Cover letters directory</div>
+      <button class="btn btn-g" onclick="loadCoverLetters()">↻</button>
+    </div>
+    <div style="padding:12px 22px;height:calc(100vh - 100px)">
+      <div class="split">
+        <div class="file-list" id="cl-list">
+          <div class="empty"><div class="spin" style="margin:0 auto"></div></div>
+        </div>
+        <div class="editor-panel" id="cl-editor">
+          <div class="no-selection">
+            <div class="no-selection-icon">✉️</div>
+            <div>Select a cover letter to view and edit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="con page" id="page-agents">
+    <div class="info"><strong>Keys are encrypted at rest</strong> (AES-128 Fernet). Only the last 4 chars are shown. Safe for GitHub — the DB is gitignored.</div>
+    <div class="sec">
+      <div class="sh"><div class="st">Add / update provider</div></div>
+      <div class="sb">
+        <div class="ps-row">
+          <div class="ps-btn sel" onclick="selP('groq',this)">⚡ Groq</div>
+          <div class="ps-btn" onclick="selP('anthropic',this)">🧠 Anthropic</div>
+          <div class="ps-btn" onclick="selP('openai',this)">🤖 OpenAI</div>
+          <div class="ps-btn" onclick="selP('gemini',this)">✨ Gemini</div>
+          <div class="ps-btn" onclick="selP('ollama',this)">🦙 Ollama</div>
+        </div>
+        <input type="hidden" id="sel-p" value="groq">
+        <div class="fr c2">
+          <div class="fld"><label>API key</label><input type="password" id="pk" placeholder="Paste key — encrypted before saving"></div>
+          <div class="fld"><label>Model (leave blank for default)</label><input id="pm" placeholder="e.g. groq/llama-3.3-70b-versatile"></div>
+        </div>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-g" onclick="addProv(false)">Save encrypted</button>
+          <button class="btn btn-p" onclick="addProv(true)">Save & set active</button>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">Configured providers</div><button class="btn btn-g" onclick="loadProviders()">↻</button></div>
+      <div class="sb" id="prov-list"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">Provider comparison</div></div>
+      <div class="sb">
+        <table class="table">
+          <thead><tr><th>Provider</th><th>Default model</th><th>Cost</th><th>Speed</th><th>Get key</th></tr></thead>
+          <tbody>
+            <tr><td>⚡ Groq</td><td style="font-family:var(--mono);font-size:11px">llama-3.3-70b-versatile</td><td><span class="badge ba">Free</span></td><td>Very fast</td><td><a href="https://console.groq.com" target="_blank" style="color:var(--blue);font-size:12px">console.groq.com</a></td></tr>
+            <tr><td>🧠 Anthropic</td><td style="font-family:var(--mono);font-size:11px">claude-sonnet-4-5</td><td><span class="badge bp">Paid</span></td><td>Fast</td><td><a href="https://console.anthropic.com" target="_blank" style="color:var(--blue);font-size:12px">console.anthropic.com</a></td></tr>
+            <tr><td>🤖 OpenAI</td><td style="font-family:var(--mono);font-size:11px">gpt-4o-mini</td><td><span class="badge bp">Paid</span></td><td>Fast</td><td><a href="https://platform.openai.com" target="_blank" style="color:var(--blue);font-size:12px">platform.openai.com</a></td></tr>
+            <tr><td>✨ Gemini</td><td style="font-family:var(--mono);font-size:11px">gemini-2.0-flash</td><td><span class="badge ba">Free tier</span></td><td>Fast</td><td><a href="https://aistudio.google.com" target="_blank" style="color:var(--blue);font-size:12px">aistudio.google.com</a></td></tr>
+            <tr><td>🦙 Ollama</td><td style="font-family:var(--mono);font-size:11px">ollama/llama3.2</td><td><span class="badge bs">Local</span></td><td>Varies</td><td style="color:var(--muted);font-size:12px">No key needed</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMANDS -->
+  <div class="con page" id="page-commands">
+    <div class="sec">
+      <div class="sh"><div class="st">Add command</div></div>
+      <div class="sb">
+        <div class="fld" style="margin-bottom:11px"><label>Instruction</label><input id="cmd" placeholder='"highlight Python and FastAPI skills prominently"'></div>
+        <div class="fr c2" style="margin-bottom:11px">
+          <div class="fld"><label>Type</label><div><span class="chip active" onclick="selChip(this,'ctype','content')">content</span><span class="chip" onclick="selChip(this,'ctype','style')">style</span><span class="chip" onclick="selChip(this,'ctype','override')">override</span><span class="chip" onclick="selChip(this,'ctype','redo')">redo</span></div><input type="hidden" id="ctype" value="content"></div>
+          <div class="fld"><label>Scope</label><div><span class="chip active" onclick="selChip(this,'cscope','global')">global</span><span class="chip" onclick="selChip(this,'cscope','job')">job-specific</span></div><input type="hidden" id="cscope" value="global"></div>
+        </div>
+        <div class="fr c2" id="jscope" style="display:none;margin-bottom:11px">
+          <div class="fld"><label>Company</label><input id="cc" placeholder="Company name"></div>
+          <div class="fld"><label>Role</label><input id="cr" placeholder="Role"></div>
+        </div>
+        <button class="btn btn-p" onclick="addCmd()">Add command</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">Active commands</div><button class="btn btn-g" onclick="loadCmds()">↻</button></div>
+      <div id="cmd-list"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">ATS defaults</div><button class="btn btn-g" onclick="loadATS()">View</button></div>
+      <div id="ats-out" style="display:none"><div class="sb"><pre id="ats-txt" style="font-family:var(--mono);font-size:11px;color:var(--muted);white-space:pre-wrap;line-height:1.7"></pre></div></div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="con page" id="page-emails">
+    <div class="sec">
+      <div class="sh"><div class="st">Email monitor</div><button class="btn btn-p" onclick="pollNow()">Poll now</button></div>
+      <div class="sb" id="em-status">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-c" id="toasts"></div>
+
+<script>
+const BASE='';
+function key(){return qid('akey').value.trim()||'changeme'}
+function qid(id){return document.getElementById(id)}
+
+const pTitles={dashboard:'Dashboard',submit:'Submit Job',review:'Review Queue',history:'History',resumes:'Resumes',coverletters:'Cover Letters',agents:'AI Agents',commands:'Commands',emails:'Email Monitor'};
+let curPage='dashboard';
+
+function P(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  qid('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+id+"'"))n.classList.add('active')});
+  qid('ptitle').textContent=pTitles[id]||id;
+  curPage=id;
+  const loaders={dashboard:refreshAll,review:loadPending,history:loadHistory,resumes:loadResumes,coverletters:loadCoverLetters,agents:loadProviders,commands:loadCmds,emails:loadEmailStatus};
+  if(loaders[id])loaders[id]();
+}
+
+function refreshCurrent(){const loaders={dashboard:refreshAll,review:loadPending,history:loadHistory,resumes:loadResumes,coverletters:loadCoverLetters,agents:loadProviders,commands:loadCmds,emails:loadEmailStatus};if(loaders[curPage])loaders[curPage]();}
+
+async function api(path,opts={}){
+  const sep=path.includes('?')?'&':'?';
+  const r=await fetch(BASE+path+sep+'key='+key(),opts);
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||r.statusText)}
+  return r.json();
+}
+
+function toast(msg,type=''){
+  const t=document.createElement('div');
+  t.className='toast '+(type==='ok'?'ok':type==='er'?'er':'');
+  t.textContent=(type==='ok'?'✓ ':type==='er'?'✕ ':'')+msg;
+  qid('toasts').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+async function checkStatus(){
+  try{
+    const d=await fetch(BASE+'/').then(r=>r.json());
+    qid('sstatus').textContent='Running';
+    qid('sdot').style.background='var(--green)';
+    qid('smodel').textContent=d.llm?.model||'No provider';
+    return d;
+  }catch{qid('sstatus').textContent='Offline';qid('sdot').style.background='var(--red)';return null}
+}
+
+async function refreshAll(){await checkStatus();loadStats();loadRecentList();loadSysStatus()}
+
+async function loadStats(){
+  try{const d=await api('/review/stats');qid('s-total').textContent=d.total||0;qid('s-pending').textContent=d.pending_review||0;qid('s-approved').textContent=d.approved||0;qid('s-submitted').textContent=d.submitted||0;qid('s-fit').textContent=(d.avg_fit_score||0).toFixed(0)}catch{}
+}
+
+async function loadRecentList(){
+  try{
+    const d=await api('/review/log?limit=5');
+    const list=d.applications||[];
+    if(!list.length){qid('recent-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div>Submit your first job</div></div>';return}
+    qid('recent-list').innerHTML='<table class="table"><thead><tr><th>Company</th><th>Role</th><th>Fit</th><th>Status</th><th>Date</th></tr></thead><tbody>'+
+      list.map(a=>`<tr onclick="openDetail(${a.id})" style="cursor:pointer"><td style="font-weight:500">${a.company_name}</td><td style="color:var(--muted)">${a.job_role}</td><td>${sb(a.fit_score)}</td><td>${statusBadge(a.status)}</td><td style="color:var(--muted);font-size:11px">${fd(a.created_at)}</td></tr>`).join('')+'</tbody></table>';
+  }catch(e){qid('recent-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+
+async function loadSysStatus(){
+  try{
+    const [em,prov]=await Promise.all([fetch(BASE+'/email-monitor/status?key='+key()).then(r=>r.json()),api('/settings/providers')]);
+    qid('sys-status').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Active LLM</div><div style="font-family:var(--mono);font-size:11px">${prov.active_model||'Not set'}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Email monitor</div><div style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:${em.running?'var(--green)':'var(--red)'};display:inline-block"></span>${em.running?'Running':'Stopped'}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Inbox</div><div style="color:${em.configured?'var(--green)':'var(--amber)'}">${em.configured?'Connected':'Not configured'}</div></div>
+    </div>`;
+  }catch{}
+}
+
+function swTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['text','url','csv'].forEach(t=>qid('tab-'+t).style.display=t===tab?'block':'none');
+}
+
+async function submitText(){
+  const company=qid('tc').value.trim(),role=qid('tr').value.trim(),desc=qid('td').value.trim();
+  if(!company||!role||!desc){toast('Fill in company, role and description','er');return}
+  const btn=qid('sub-btn');btn.disabled=true;btn.innerHTML='<div class="spin"></div> Running...';
+  try{
+    const body={company_name:company,role,description:desc};
+    if(qid('tu').value)body.url=qid('tu').value;
+    if(qid('ti').value)body.redo_instruction=qid('ti').value;
+    await api('/ingest/text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    toast('Submitted! Claude is working...','ok');
+    qid('tc').value='';qid('tr').value='';qid('td').value='';qid('tu').value='';qid('ti').value='';
+    setTimeout(loadStats,3000);
+  }catch(e){toast(e.message,'er')}
+  btn.disabled=false;btn.innerHTML='Submit job';
+}
+
+async function submitUrl(){
+  const url=qid('uu').value.trim(),company=qid('uc').value.trim(),role=qid('ur').value.trim();
+  if(!url||!company||!role){toast('Fill in all fields','er');return}
+  try{await api('/ingest/url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,company_name:company,role})});toast('Submitted!','ok')}
+  catch(e){toast(e.message,'er')}
+}
+
+async function submitCsv(){
+  const file=qid('cf').files[0];if(!file){toast('Select a file','er');return}
+  const fd=new FormData();fd.append('file',file);
+  try{const r=await fetch(BASE+'/ingest/csv?key='+key(),{method:'POST',body:fd});if(!r.ok){const e=await r.json();throw new Error(e.detail)}const d=await r.json();toast(d.message,'ok')}
+  catch(e){toast(e.message,'er')}
+}
+
+async function loadPending(){
+  qid('pending-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{
+    const d=await api('/review/pending');const list=d.pending||[];
+    if(!list.length){qid('pending-list').innerHTML='<div class="empty"><div class="empty-i">✅</div><div>All caught up!</div></div>';return}
+    qid('pending-list').innerHTML=list.map(a=>`<div style="padding:16px;border-bottom:1px solid var(--b)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <div><div style="font-size:14px;font-weight:600;margin-bottom:2px">${a.company_name} · ${a.job_role}</div><div style="font-size:11px;color:var(--muted)">${fd(a.created_at)}</div></div>
+        <div style="display:flex;gap:7px;align-items:center;flex-shrink:0">${sb(a.fit_score)}<span style="font-size:10px;color:var(--muted)">fit</span>${sb(a.ats_score)}<span style="font-size:10px;color:var(--muted)">ats</span></div>
+      </div>
+      ${a.reasoning?`<div style="font-size:12px;color:var(--muted);background:var(--sur2);border-radius:var(--rs);padding:8px;margin-bottom:10px;line-height:1.6">${a.reasoning.slice(0,260)}${a.reasoning.length>260?'...':''}</div>`:''}
+      ${a.skills_to_learn?.length?`<div style="margin-bottom:10px">${a.skills_to_learn.slice(0,5).map(s=>`<span class="tag">${s}</span>`).join('')}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${a.cover_letter_path&&a.cover_letter_path!=='no_cover_letter_generated'?`<button class="btn btn-g" onclick="openCLEditor('${enc(a.cover_letter_path.split('/').pop())}')">📝 View & edit</button><button class="btn btn-g" onclick="dlCL('${enc(a.cover_letter_path.split('/').pop())}')">⬇ Download</button>`:'<span style="font-size:11px;color:var(--muted);align-self:center">Score &lt; 83 — no letter</span>'}
+        <button class="btn btn-s" onclick="approve(${a.id})">✓ Approve</button>
+        <button class="btn btn-d" onclick="reject(${a.id})">✕ Reject</button>
+        <button class="btn btn-g" onclick="redo(${a.id})">↺ Redo</button>
+      </div>
+    </div>`).join('');
+  }catch(e){qid('pending-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+
+async function approve(id){const n=prompt('Notes (optional):');try{await api('/review/'+id+'/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviewer_notes:n||null})});toast('Approved #'+id,'ok');loadPending();loadStats()}catch(e){toast(e.message,'er')}}
+async function reject(id){const n=prompt('Rejection reason (required):');if(!n){toast('Reason required','er');return}try{await api('/review/'+id+'/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviewer_notes:n})});toast('Rejected #'+id);loadPending();loadStats()}catch(e){toast(e.message,'er')}}
+async function markSubmitted(id){try{await api('/review/'+id+'/mark-submitted',{method:'POST'});toast('Marked submitted!','ok');loadHistory();loadStats()}catch(e){toast(e.message,'er')}}
+async function redo(id){const i=prompt('Redo instruction:');if(!i)return;try{const d=await api('/commands/redo/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({redo_instruction:i})});toast('Redo started! New entry #'+d.log_id,'ok');setTimeout(()=>{loadPending();loadStats()},2000)}catch(e){toast(e.message,'er')}}
+
+async function loadHistory(){
+  const f=qid('hf').value;
+  qid('history-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{
+    const d=await api('/review/log?limit=100'+(f?'&filter_status='+f:''));const list=d.applications||[];
+    if(!list.length){qid('history-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div>No applications found</div></div>';return}
+    qid('history-list').innerHTML='<table class="table"><thead><tr><th>#</th><th>Company</th><th>Role</th><th>Fit</th><th>ATS</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>'+
+      list.map(a=>`<tr><td style="color:var(--muted);font-family:var(--mono);font-size:11px">${a.id}</td><td style="font-weight:500">${a.company_name}</td><td style="color:var(--muted)">${a.job_role}</td><td>${sb(a.fit_score)}</td><td>${sb(a.ats_score)}</td><td>${statusBadge(a.status)}</td><td style="color:var(--muted);font-size:11px">${fd(a.created_at)}</td><td><button class="btn btn-g" style="padding:4px 9px;font-size:11px" onclick="openDetail(${a.id})">Detail</button></td></tr>`).join('')+'</tbody></table>';
+  }catch(e){qid('history-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+
+async function openDetail(id){
+  P('history');
+  try{
+    const a=await api('/review/'+id);
+    qid('det-title').textContent=`#${id} · ${a.company_name} — ${a.job_role}`;
+    qid('det-body').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Resume</div><div style="font-family:var(--mono);font-size:11px">${a.best_resume_name||'—'}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Status</div><div>${statusBadge(a.status)}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Fit</div><div style="display:flex;align-items:center;gap:7px">${sb(a.fit_score)}<span style="font-size:11px;color:var(--muted)">/100</span></div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">ATS</div><div style="display:flex;align-items:center;gap:7px">${sb(a.ats_score)}<span style="font-size:11px;color:var(--muted)">/100</span></div></div>
+    </div>
+    ${a.reasoning?`<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">Reasoning</div><div style="font-size:12px;color:var(--muted);background:var(--sur2);border-radius:var(--rs);padding:10px;line-height:1.7">${a.reasoning}</div></div>`:''}
+    ${a.skills_to_learn?.length?`<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">Skills to learn</div>${a.skills_to_learn.map(s=>`<span class="tag">${s}</span>`).join('')}</div>`:''}
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      ${a.cover_letter_path&&a.cover_letter_path!=='no_cover_letter_generated'?`<button class="btn btn-g" onclick="openCLEditor('${enc(a.cover_letter_path.split('/').pop())}')">📝 View & edit letter</button><button class="btn btn-g" onclick="dlCL('${enc(a.cover_letter_path.split('/').pop())}')">⬇ Download</button>`:''}
+      ${a.status==='pending_review'?`<button class="btn btn-s" onclick="approve(${id})">✓ Approve</button><button class="btn btn-d" onclick="reject(${id})">✕ Reject</button>`:''}
+      ${a.status==='approved'?`<button class="btn btn-p" onclick="markSubmitted(${id})">Mark submitted</button>`:''}
+      <button class="btn btn-g" onclick="redo(${id})">↺ Redo</button>
+    </div>`;
+    qid('det-panel').style.display='block';
+    qid('det-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){toast(e.message,'er')}
+}
+
+// ── Resumes ──────────────────────────────────────────────────────────────
+let selResume=null;
+async function loadResumes(){
+  qid('resume-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{
+    const d=await api('/documents/resumes');
+    qid('resume-dir-label').textContent=d.directory;
+    const list=d.resumes||[];
+    if(!list.length){qid('resume-list').innerHTML='<div class="empty"><div class="empty-i">📄</div><div>No resumes yet<br>Upload one above</div></div>';return}
+    qid('resume-list').innerHTML=list.map(f=>`<div class="file-item" id="ri-${f.filename.replace(/\./g,'_')}" onclick="openResume('${enc(f.filename)}')">
+      <div class="fi-name">${f.filename}</div>
+      <div class="fi-meta">${f.size_kb} KB</div>
+    </div>`).join('');
+  }catch(e){qid('resume-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+
+async function openResume(filename){
+  const fn=decodeURIComponent(filename);
+  document.querySelectorAll('.file-item').forEach(i=>i.classList.remove('active'));
+  const el=qid('ri-'+fn.replace(/\./g,'_'));if(el)el.classList.add('active');
+  selResume=fn;
+  qid('resume-editor').innerHTML=`<div class="editor-toolbar"><div class="editor-title">${fn}</div><div class="editor-actions"><span style="font-size:11px;color:var(--muted)">Read-only preview</span><button class="btn btn-d btn-sm" style="margin-left:8px" onclick="deleteResume('${filename}')">Delete</button></div></div><div class="editor-body"><div style="padding:18px;text-align:center;color:var(--muted);font-size:12px"><div class="spin" style="margin:0 auto 10px"></div>Extracting text...</div></div>`;
+  try{
+    const d=await api('/documents/resumes/'+filename+'/text');
+    qid('resume-editor').innerHTML=`<div class="editor-toolbar">
+      <div class="editor-title">${fn}</div>
+      <div class="editor-actions">
+        <span style="font-size:11px;color:var(--muted)">Extracted text — read only</span>
+        <button class="btn btn-d" style="margin-left:8px" onclick="deleteResume('${filename}')">Delete</button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <textarea class="editor-textarea" readonly style="color:var(--muted)">${esc(d.text)}</textarea>
+    </div>`;
+  }catch(e){toast(e.message,'er')}
+}
+
+async function uploadResume(input){
+  const file=input.files[0];if(!file)return;
+  const fd=new FormData();fd.append('file',file);
+  try{const r=await fetch(BASE+'/documents/resumes/upload?key='+key(),{method:'POST',body:fd});if(!r.ok){const e=await r.json();throw new Error(e.detail)}const d=await r.json();toast(d.message,'ok');loadResumes();input.value=''}
+  catch(e){toast(e.message,'er')}
+}
+
+async function deleteResume(filename){
+  if(!confirm('Delete '+decodeURIComponent(filename)+'?'))return;
+  try{await api('/documents/resumes/'+filename,{method:'DELETE'});toast('Deleted','ok');loadResumes();qid('resume-editor').innerHTML='<div class="no-selection"><div class="no-selection-icon">📄</div><div>Select a resume to preview</div></div>'}
+  catch(e){toast(e.message,'er')}
+}
+
+// ── Cover Letters ─────────────────────────────────────────────────────────
+let selCL=null,clOrigText='';
+async function loadCoverLetters(){
+  qid('cl-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{
+    const d=await api('/documents/cover-letters');
+    qid('cl-dir-label').textContent=d.directory;
+    const list=d.cover_letters||[];
+    if(!list.length){qid('cl-list').innerHTML='<div class="empty"><div class="empty-i">✉️</div><div>No cover letters yet<br>Submit a job to generate one</div></div>';return}
+    qid('cl-list').innerHTML=list.map(f=>`<div class="file-item" id="cli-${f.filename.replace(/[\.\s\-]/g,'_')}" onclick="openCL('${enc(f.filename)}')">
+      <div class="fi-name">${f.filename}</div>
+      <div class="fi-meta">${f.size_kb} KB · ${f.type.toUpperCase()}</div>
+    </div>`).join('');
+  }catch(e){qid('cl-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+
+async function openCL(filename){
+  const fn=decodeURIComponent(filename);
+  document.querySelectorAll('.file-item').forEach(i=>i.classList.remove('active'));
+  const safeId='cli-'+fn.replace(/[\.\s\-]/g,'_');
+  const el=qid(safeId);if(el)el.classList.add('active');
+  selCL=fn;
+  qid('cl-editor').innerHTML=`<div class="editor-toolbar"><div class="editor-title">${fn}</div></div><div class="editor-body"><div style="padding:18px;text-align:center;color:var(--muted);font-size:12px"><div class="spin" style="margin:0 auto 10px"></div>Loading...</div></div>`;
+  try{
+    const d=await api('/documents/cover-letters/'+filename+'/text');
+    clOrigText=d.text;
+    qid('cl-editor').innerHTML=`<div class="editor-toolbar">
+      <div class="editor-title">${fn}</div>
+      <div class="editor-actions">
+        <button class="btn btn-g" onclick="resetCL()">Reset</button>
+        <button class="btn btn-g" onclick="dlCL('${filename}')">⬇ Download</button>
+        <button class="btn btn-d" onclick="deleteCL('${filename}')">Delete</button>
+        <button class="btn btn-p" id="save-cl-btn" onclick="saveCL('${filename}')">Save & regenerate PDF</button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div style="padding:8px 14px;background:var(--sur3);border-bottom:1px solid var(--b);font-size:11px;color:var(--muted)">Edit below — formatting: <strong style="color:var(--text)">**bold text**</strong> will render bold in PDF</div>
+      <textarea class="editor-textarea" id="cl-textarea" spellcheck="true">${esc(d.text)}</textarea>
+    </div>`;
+  }catch(e){toast(e.message,'er')}
+}
+
+function openCLEditor(filename){P('coverletters');setTimeout(()=>openCL(filename),100)}
+
+function resetCL(){const ta=qid('cl-textarea');if(ta)ta.value=clOrigText}
+
+async function saveCL(filename){
+  const ta=qid('cl-textarea');if(!ta)return;
+  const btn=qid('save-cl-btn');btn.disabled=true;btn.textContent='Saving...';
+  try{
+    const d=await api('/documents/cover-letters/'+filename,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ta.value})});
+    toast(d.message,'ok');clOrigText=ta.value;
+  }catch(e){toast(e.message,'er')}
+  btn.disabled=false;btn.textContent='Save & regenerate PDF';
+}
+
+async function deleteCL(filename){
+  if(!confirm('Delete '+decodeURIComponent(filename)+'?'))return;
+  try{await api('/documents/cover-letters/'+filename,{method:'DELETE'});toast('Deleted','ok');loadCoverLetters();qid('cl-editor').innerHTML='<div class="no-selection"><div class="no-selection-icon">✉️</div><div>Select a cover letter</div></div>'}
+  catch(e){toast(e.message,'er')}
+}
+
+function dlCL(fn){window.open(BASE+'/documents/cover-letters/'+fn+'/download?key='+key(),'_blank')}
+
+// ── Agents ────────────────────────────────────────────────────────────────
+function selP(p,el){document.querySelectorAll('.ps-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');qid('sel-p').value=p;qid('pm').placeholder='Default: '+({'groq':'groq/llama-3.3-70b-versatile','anthropic':'anthropic/claude-sonnet-4-5','openai':'openai/gpt-4o-mini','gemini':'gemini/gemini-2.0-flash','ollama':'ollama/llama3.2'}[p]||p)}
+async function addProv(setActive){
+  const provider=qid('sel-p').value,api_key=qid('pk').value.trim(),model=qid('pm').value.trim();
+  if(!api_key&&provider!=='ollama'){toast('Enter an API key','er');return}
+  try{await api('/settings/providers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,api_key,model:model||undefined,set_active:setActive})});toast(provider+' saved'+(setActive?' & active':''),'ok');qid('pk').value='';qid('pm').value='';loadProviders();checkStatus()}catch(e){toast(e.message,'er')}
+}
+async function loadProviders(){
+  qid('prov-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{
+    const d=await api('/settings/providers');const list=d.providers||[];
+    if(!list.length){qid('prov-list').innerHTML='<div class="empty"><div class="empty-i">🔑</div><div>No providers configured</div></div>';return}
+    const icons={groq:'⚡',anthropic:'🧠',openai:'🤖',gemini:'✨',ollama:'🦙'};
+    qid('prov-list').innerHTML='<div class="pgrid">'+list.map(p=>`<div class="pcard${p.is_active?' active-p':''}" onclick="activateProv('${p.provider}')">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:18px">${icons[p.provider]||'🤖'}</span><span class="pname">${p.provider}</span></div>
+      <div class="pmodel">${p.model}</div>
+      <div class="pkey">${p.key_preview}</div>
+      <div style="display:flex;gap:5px">${!p.is_active?`<button class="btn btn-s" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();activateProv('${p.provider}')">Set active</button>`:''}
+      <button class="btn btn-d" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();removeProv('${p.provider}')">Remove</button></div>
+    </div>`).join('')+'</div>';
+  }catch(e){qid('prov-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+async function activateProv(p){try{await api('/settings/providers/'+p+'/activate',{method:'POST'});toast(p+' is now active','ok');loadProviders();checkStatus()}catch(e){toast(e.message,'er')}}
+async function removeProv(p){if(!confirm('Remove '+p+'?'))return;try{await api('/settings/providers/'+p,{method:'DELETE'});toast('Removed');loadProviders()}catch(e){toast(e.message,'er')}}
+
+// ── Commands ──────────────────────────────────────────────────────────────
+function selChip(el,hid,val){el.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');qid(hid).value=val;if(hid==='cscope')qid('jscope').style.display=val==='job'?'grid':'none'}
+async function addCmd(){const cmd=qid('cmd').value.trim();if(!cmd){toast('Enter a command','er');return}const body={command:cmd,type:qid('ctype').value,scope:qid('cscope').value};if(body.scope==='job'){body.company=qid('cc').value;body.job_role=qid('cr').value}try{await api('/commands',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});toast('Added','ok');qid('cmd').value='';loadCmds()}catch(e){toast(e.message,'er')}}
+async function loadCmds(){
+  qid('cmd-list').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  try{const d=await api('/commands');const list=d.commands||[];if(!list.length){qid('cmd-list').innerHTML='<div class="empty"><div class="empty-i">⚡</div><div>No active commands</div></div>';return}
+  qid('cmd-list').innerHTML='<table class="table"><thead><tr><th>#</th><th>Command</th><th>Type</th><th>Scope</th><th></th></tr></thead><tbody>'+list.map(c=>`<tr><td style="color:var(--muted);font-family:var(--mono);font-size:11px">${c.id}</td><td style="font-style:italic">"${c.command}"</td><td><span class="badge" style="background:var(--sur3);color:var(--muted);border:1px solid var(--b)">${c.type}</span></td><td style="color:var(--muted);font-size:11px">${c.scope}${c.company?' — '+c.company:''}</td><td><button class="btn btn-d" style="font-size:11px;padding:4px 8px" onclick="delCmd(${c.id})">✕</button></td></tr>`).join('')+'</tbody></table>'}catch(e){qid('cmd-list').innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}
+}
+async function delCmd(id){try{await api('/commands/'+id,{method:'DELETE'});toast('Removed');loadCmds()}catch(e){toast(e.message,'er')}}
+async function loadATS(){try{const d=await api('/commands/ats-defaults');qid('ats-txt').textContent=d.rendered_prompt_block||'';qid('ats-out').style.display='block'}catch(e){toast(e.message,'er')}}
+
+// ── Email ─────────────────────────────────────────────────────────────────
+async function loadEmailStatus(){
+  try{const d=await fetch(BASE+'/email-monitor/status?key='+key()).then(r=>r.json());
+  qid('em-status').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Status</div><div style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:${d.running?'var(--green)':'var(--red)'};display:inline-block"></span>${d.running?'Running':'Stopped'}</div></div>
+    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Inbox</div><div style="color:${d.configured?'var(--green)':'var(--amber)'}">${d.configured?'Connected':'Set EMAIL_ADDRESS in .env'}</div></div>
+    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Poll interval</div><div>${d.interval_secs}s</div></div>
+    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px">Events found</div><div style="font-family:var(--mono)">${d.total_processed}</div></div>
+  </div>`}catch(e){qid('em-status').innerHTML='<div style="color:var(--red)">'+e.message+'</div>'}
+}
+async function pollNow(){try{const d=await fetch(BASE+'/email-monitor/poll?key='+key(),{method:'POST'}).then(r=>r.json());toast('Poll complete — '+d.processed+' event(s)','ok');loadEmailStatus()}catch(e){toast(e.message,'er')}}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function sb(s){if(s==null)return '<span style="color:var(--muted)">—</span>';const n=Math.round(s);const c=n>=80?'sh-s':n>=60?'mi-s':'lo-s';return `<div class="score ${c}">${n}</div>`}
+function statusBadge(s){const m={pending_review:'bp',approved:'ba',rejected:'br',submitted:'bs',interview_invited:'bi',rejected_by_company:'br',awaiting_response:'bp'};const l={pending_review:'Pending',approved:'Approved',rejected:'Rejected',submitted:'Submitted',interview_invited:'Interview!',rejected_by_company:'Rejected',awaiting_response:'Follow-up'};return `<span class="badge ${m[s]||''}">${l[s]||s}</span>`}
+function fd(iso){if(!iso)return '—';try{return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return iso.slice(0,10)}}
+function enc(s){return encodeURIComponent(s)}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function dlCL(fn){window.open(BASE+'/documents/cover-letters/'+fn+'/download?key='+key(),'_blank')}
+
+// Init
+refreshAll();
+setInterval(()=>{checkStatus();if(curPage==='dashboard')loadStats()},30000);
+</script>
+</body>
+</html>

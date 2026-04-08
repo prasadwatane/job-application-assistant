@@ -1,0 +1,171 @@
+resume_picker:
+  description: >
+    Follow these rules first:
+
+    {enriched_prompt}
+
+    Analyse these resumes:
+
+    {resumes}
+
+    Choose the single best resume for:
+
+    {job_description}
+
+    Target: {company_name} — {job_role}
+
+    Scoring (be brutally honest, do not inflate):
+      - Education background relevance
+      - Technical skills match (keyword overlap, not impression)
+      - Work experience relevance and seniority
+      - Domain and industry fit
+      - Overall alignment to the role
+
+    Score above 83 triggers cover letter and resume tailoring.
+    Your output will be reviewed by a human. Be specific.
+
+  expected_output: >
+    JSON with exactly:
+      reasoning        (str)   Clear explanation for human reviewer.
+      fit_score        (float) Honest score 0-100.
+      skills_to_learn  (list)  Skills in JD but missing from resume.
+      best_resume_name (str)   Exact filename of chosen resume.
+      resume_text      (str)   Full extracted text of the chosen resume.
+
+  agent: resume_manager
+
+
+resume_tailor:
+  description: >
+    Follow these rules first:
+
+    {enriched_prompt}
+
+    You have the chosen resume and job description from the previous task.
+    Rewrite the resume to be perfectly tailored for this specific role.
+
+    Company: {company_name}
+    Role:    {job_role}
+    Date:    {today}
+
+    TAILORING RULES (mandatory):
+    1. Keep ALL personal details exactly as-is:
+         Prasad Watane
+         chetanwattane@gmail.com
+         +49 15210901787
+         linkedin.com/in/prasad-watane-4836a8226
+         github.com/prasadwatane
+         Heidelberg, Germany
+
+    2. Professional Summary (3-4 sentences):
+       - Include the exact job title from the posting
+       - Mirror the top 3-5 keywords from the JD verbatim
+       - Mention years of experience and most relevant skills
+       - End with a sentence about readiness to contribute
+
+    3. Work Experience — for each role:
+       - Rewrite bullets to lead with JD-relevant achievements
+       - Mirror exact JD terminology (e.g. "machine learning" not "ML" if JD says it)
+       - Quantify every bullet: numbers, %, time saved, team size
+       - Start every bullet with a strong action verb
+       - Remove bullets that are completely irrelevant to this role
+       - Add context about skills_to_learn if candidate is actively developing them
+
+    4. Technical Skills:
+       - Reorder to put JD-required skills first
+       - Add skills_to_learn section at the bottom as "Currently developing:"
+       - Mirror exact tool names from the JD
+
+    5. Keep Education, Publications, and Projects sections intact.
+       Reorder projects to put the most JD-relevant ones first.
+
+    6. NO personal pronouns anywhere (I, me, my, we, our).
+    7. NO em dashes.
+    8. NEVER invent skills or experience not in the original resume.
+    9. Dates format: Mon YYYY - Mon YYYY
+
+    After writing, use the tool to save as:
+    Prasad_Watane_{company_name}_{job_role}.pdf
+    (replace spaces with underscores)
+
+  expected_output: >
+    JSON with exactly:
+      tailored_resume_path  (str)   Absolute path to the saved PDF.
+      tailoring_notes       (str)   Brief note for human reviewer on key changes made.
+      fit_score             (float) Pass through from resume_picker.
+      skills_to_learn       (list)  Pass through from resume_picker.
+      best_resume_name      (str)   Pass through from resume_picker.
+
+  agent: resume_tailor
+  context:
+    - resume_picker
+
+
+cover_letter_generator:
+  description: >
+    Follow these rules first:
+
+    {enriched_prompt}
+
+    Using the TAILORED resume from the previous task, write a cover letter for:
+      Company: {company_name}
+      Role:    {job_role}
+      Date:    {today}
+
+    IMPORTANT: Use the tailored resume content — not the original.
+    This letter will NOT be sent automatically. A human will approve it.
+
+    Only generate if fit_score is above 83.
+    If 83 or below, set cover_letter_path to "no_cover_letter_generated".
+
+    LAYOUT (mandatory):
+    1. First four lines:
+         Prasad Watane
+         chetanwattane@gmail.com
+         +49 15210901787
+         {today}
+       Then one blank line, then the greeting.
+
+    2. Greeting: "Dear Hiring Team," (or from job ad)
+
+    3. Catchy unique opening: name Prasad, degree (M.Sc. Applied Data Science
+       and Analytics), university (SRH Hochschule Heidelberg), confirm studies
+       complete. Never start with "I am writing to apply..."
+
+    4. Bold checklist — 7 to 9 bold items covering ALL of A-E:
+       A. **SRH Hochschule Heidelberg** and **M.Sc. Applied Data Science and Analytics**
+       B. Two technical skills matching the JD (e.g. **Python**, **FastAPI**)
+       C. One past employer and city with result
+          e.g. **Onwards Technologies (Pune)** or **AGDATA India (Pune)**
+       D. Soft skill e.g. **curious-minded** or **continuous learning**
+       E. Hard-skill framework e.g. **PyTorch** or **scikit-learn** or **FastAPI**
+
+    5. Body (200-300 words total):
+       Intro (50 words max): hook + both Education bolds
+       Para 2 (70 words max): specific interest in the company and role
+       Middle (120 words max): technical bolds, employer line, soft skill,
+         hard-skill framework, link to JD, readiness to learn missing skills
+       Conclusion (60 words max): strong interest, invite contact,
+         mention tailored CV and resume attached
+
+    6. Close:
+         Sincerely,
+         Prasad Watane
+
+    7. No em dashes anywhere.
+
+    Save as: {company_name} - {job_role}.pdf
+
+  expected_output: >
+    JSON with exactly:
+      cover_letter_path  (str)   Absolute path to PDF or "no_cover_letter_generated"
+      reasoning          (str)   Brief note for human reviewer.
+      fit_score          (float) Pass through from resume_picker.
+      skills_to_learn    (list)  Pass through from resume_picker.
+      best_resume_name   (str)   Pass through from resume_picker.
+      tailored_resume_path (str) Pass through from resume_tailor.
+
+  agent: cover_letter_manager
+  context:
+    - resume_picker
+    - resume_tailor

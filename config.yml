@@ -1,0 +1,6 @@
+resume_directory: /Users/chetan/ai-assistant/resumes
+cover_letters_dir: generated_cover_letters
+milvus_uri: ./milvus_lite.db
+collection_name: job_applications
+ats_warning_threshold: 60
+cover_letter_threshold: 83
